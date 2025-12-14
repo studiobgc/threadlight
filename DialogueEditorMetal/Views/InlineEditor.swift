@@ -91,7 +91,7 @@ struct InlineEditor: View {
         .frame(width: max(node.size.width + 40, 320))
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color(hex: "1e1e2e"))
+                .fill(Color(hex: "101012"))
                 .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 8)
         )
         .overlay(
@@ -265,7 +265,7 @@ struct QuickActionButton: View {
 struct InlineEditor_Previews: PreviewProvider {
     static var previews: some View {
         ZStack {
-            Color(hex: "1e1e2e")
+            Color(hex: "101012")
             
             InlineEditor(
                 node: DialogueNode(type: .dialogue, position: .zero),

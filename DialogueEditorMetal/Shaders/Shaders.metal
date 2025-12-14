@@ -51,8 +51,8 @@ fragment float4 gridFragmentShader(
     float2 worldPos = in.worldPos;
     float zoom = uniforms.zoom;
     
-    // Background color
-    float4 color = grid.backgroundColor;
+    // KARE 2030: Deep, matte black background
+    float4 color = float4(0.08, 0.08, 0.09, 1.0);
     
     // Fade grid at low zoom
     if (zoom < 0.15) {
@@ -61,48 +61,31 @@ fragment float4 gridFragmentShader(
     
     float gridOpacity = saturate((zoom - 0.15) / 0.35);
     
-    // Minor grid dots
-    if (zoom > 0.4) {
-        float minorSize = grid.minorGridSize;
-        float2 minorGrid = fmod(abs(worldPos), minorSize);
-        float minorDist = length(minorGrid - minorSize * 0.5);
-        
-        // Skip major grid intersections
-        float2 majorGrid = fmod(abs(worldPos), grid.majorGridSize);
-        bool isMajorIntersection = length(majorGrid - grid.majorGridSize * 0.5) < minorSize;
-        
-        if (!isMajorIntersection) {
-            float dotSize = max(1.0, 1.5 / zoom);
-            float dot = smoothstep(dotSize + 0.5, dotSize - 0.5, minorDist);
-            color = mix(color, float4(0.29, 0.29, 0.42, 1.0), dot * 0.4 * gridOpacity);
-        }
-    }
+    // UTILITARIAN: Simple dot grid (no fancy lines)
+    float majorSize = 100.0;
+    float2 gridCell = fmod(abs(worldPos), majorSize);
+    float dotDist = length(gridCell - majorSize * 0.5);
     
-    // Major grid lines
-    float majorSize = grid.majorGridSize;
-    float2 majorGrid = fmod(abs(worldPos), majorSize);
-    float lineWidth = 1.0 / zoom;
+    // Small, crisp dots
+    float dotSize = max(1.5, 2.0 / zoom);
+    float dot = smoothstep(dotSize + 0.3, dotSize - 0.3, dotDist);
     
-    float lineX = smoothstep(lineWidth, 0, abs(majorGrid.x));
-    float lineY = smoothstep(lineWidth, 0, abs(majorGrid.y));
-    float majorLine = max(lineX, lineY);
+    // Subtle dot color
+    float4 dotColor = float4(0.18, 0.18, 0.20, 1.0);
+    color = mix(color, dotColor, dot * gridOpacity * 0.8);
     
-    color = mix(color, grid.majorGridColor, majorLine * 0.6 * gridOpacity);
+    // Origin crosshair - simple, no glow
+    float originWidth = 1.5 / zoom;
+    float originX = smoothstep(originWidth, 0, abs(worldPos.x));
+    float originY = smoothstep(originWidth, 0, abs(worldPos.y));
+    float origin = max(originX, originY);
     
-    // Origin crosshair with glow
-    float originDist = min(abs(worldPos.x), abs(worldPos.y));
-    float originLine = smoothstep(2.0 / zoom, 0, originDist);
-    float4 originColor = float4(0.486, 0.227, 0.929, 1.0); // Purple
-    
-    // Add glow
-    float glowDist = min(abs(worldPos.x), abs(worldPos.y));
-    float glow = exp(-glowDist * zoom * 0.1) * 0.3;
-    
-    color = mix(color, originColor, (originLine * 0.6 + glow) * saturate(zoom));
+    // Warm accent for origin
+    float4 originColor = float4(1.0, 0.4, 0.2, 1.0);
+    color = mix(color, originColor, origin * 0.5 * saturate(zoom));
     
     return color;
 }
-
 // MARK: - Node Shader (Instanced)
 
 struct NodeVertexOut {
@@ -158,42 +141,61 @@ fragment float4 nodeFragmentShader(
     float2 halfSize = in.size * 0.5;
     float2 center = pos - halfSize;
     
-    // SDF for rounded rectangle
-    float dist = roundedBoxSDF(center, halfSize, in.cornerRadius);
+    // SUSAN KARE 2030: Crisp, pixel-perfect edges
+    float cornerRadius = 4.0; // Smaller, tighter corners
+    float dist = roundedBoxSDF(center, halfSize, cornerRadius);
     
-    // Crisp anti-aliased edge
-    float aa = fwidth(dist) * 1.0;
+    // Ultra-crisp edge (no blur)
+    float aa = fwidth(dist) * 0.8;
     float shape = smoothEdge(dist, aa);
     
     if (shape < 0.001) {
         discard_fragment();
     }
     
-    // Header region (top 30px)
-    float headerHeight = 30.0;
-    float headerMask = smoothstep(halfSize.y - headerHeight - 1, halfSize.y - headerHeight + 1, -center.y);
+    // UTILITARIAN: Flat header, no gradients
+    float headerHeight = 24.0; // Compact header
+    float headerMask = step(halfSize.y - headerHeight, -center.y);
     
-    // Simple colors - no gradients, no fancy effects
-    float4 baseColor = mix(in.backgroundColor, in.headerColor, headerMask);
+    // HIGH CONTRAST: Pure flat colors
+    float4 bodyColor = float4(0.12, 0.12, 0.14, 1.0);  // Near-black body
+    float4 headerColor = in.headerColor;
+    float4 baseColor = mix(bodyColor, headerColor, headerMask);
     
-    // Border - simple and clean
-    float borderDist = abs(dist) - in.borderWidth * 0.5;
-    float borderMask = smoothEdge(borderDist, aa);
-    float4 borderColor = in.borderColor;
+    // MINIMAL CHROME: 1px border, high contrast
+    float borderWidth = 1.0;
+    float borderDist = abs(dist) - borderWidth * 0.5;
+    float borderMask = smoothEdge(borderDist, aa * 0.5);
     
-    // Selection: just brighter border
+    // Default border: subtle
+    float4 borderColor = float4(0.25, 0.25, 0.28, 1.0);
+    
+    // Selection: bright accent (not purple glow - just solid line)
     if (in.isSelected > 0.5) {
-        borderColor = float4(0.486, 0.227, 0.929, 1.0);
+        borderColor = float4(1.0, 0.4, 0.2, 1.0); // Warm orange accent
+        borderWidth = 2.0;
     }
     
-    // Hover: subtle border change
+    // Hover: slight brighten
     if (in.isHovered > 0.5 && in.isSelected < 0.5) {
-        borderColor = float4(0.5, 0.4, 0.8, 1.0);
+        borderColor = float4(0.4, 0.4, 0.45, 1.0);
     }
     
-    // Combine - simple blend
-    float4 color = mix(baseColor, borderColor, (1.0 - borderMask) * shape);
-    color.a *= shape;
+    // MICRO-ANIMATION: Subtle selection pulse (GPU-friendly)
+    if (in.isSelected > 0.5) {
+        float pulse = 0.9 + 0.1 * sin(uniforms.time * 4.0);
+        borderColor.rgb *= pulse;
+    }
+    
+    // Clean combine - no blending tricks
+    float4 color = baseColor;
+    color = mix(color, borderColor, (1.0 - borderMask) * shape);
+    color.a = shape;
+    
+    // Header divider line (1px, crisp)
+    float dividerY = halfSize.y - headerHeight;
+    float divider = smoothstep(0.5, -0.5, abs(center.y + dividerY) - 0.5);
+    color.rgb = mix(color.rgb, float3(0.2, 0.2, 0.22), divider * headerMask);
     
     return color;
 }

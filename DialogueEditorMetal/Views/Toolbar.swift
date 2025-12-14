@@ -68,7 +68,7 @@ struct EditorToolbar: View {
                     .padding(.vertical, 6)
                     .background(
                         RoundedRectangle(cornerRadius: 6)
-                            .fill(Color(hex: "7c3aed"))
+                            .fill(Color(hex: "ff6633"))
                     )
                 }
                 .buttonStyle(.plain)
@@ -88,7 +88,7 @@ struct EditorToolbar: View {
                 ToolbarButton(icon: "play.fill", tooltip: "Preview") {
                     // TODO: Preview mode
                 }
-                .foregroundColor(Color(hex: "10b981"))
+                .foregroundColor(Color(hex: "4ade80"))
                 
                 ToolbarButton(icon: "gearshape", tooltip: "Settings") {
                     // TODO: Settings
@@ -97,7 +97,7 @@ struct EditorToolbar: View {
         }
         .padding(.horizontal, 12)
         .frame(height: 44)
-        .background(Color(hex: "16162a"))
+        .background(Color(hex: "0e0e10"))
         .overlay(
             Rectangle()
                 .fill(Color.white.opacity(0.05))
@@ -150,11 +150,11 @@ struct ToolbarToggle: View {
         } label: {
             Image(systemName: icon)
                 .font(.system(size: 14, weight: .medium))
-                .foregroundColor(isOn ? Color(hex: "7c3aed") : .white.opacity(isHovered ? 0.9 : 0.6))
+                .foregroundColor(isOn ? Color(hex: "ff6633") : .white.opacity(isHovered ? 0.9 : 0.6))
                 .frame(width: 32, height: 32)
                 .background(
                     RoundedRectangle(cornerRadius: 6)
-                        .fill(isOn ? Color(hex: "7c3aed").opacity(0.2) : (isHovered ? Color.white.opacity(0.1) : Color.clear))
+                        .fill(isOn ? Color(hex: "ff6633").opacity(0.2) : (isHovered ? Color.white.opacity(0.1) : Color.clear))
                 )
         }
         .buttonStyle(.plain)
@@ -290,7 +290,7 @@ struct Toolbar_Previews: PreviewProvider {
                 .environmentObject(GraphModel())
         }
         .frame(width: 1000)
-        .background(Color(hex: "1e1e2e"))
+        .background(Color(hex: "101012"))
     }
 }
 #endif

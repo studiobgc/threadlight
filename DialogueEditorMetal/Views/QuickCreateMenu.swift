@@ -137,7 +137,7 @@ struct QuickCreateMenu: View {
         .frame(width: 260)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(hex: "1a1a2e"))
+                .fill(Color(hex: "0a0a0c"))
                 .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 10)
         )
         .overlay(
@@ -278,7 +278,7 @@ struct QuickCreateItem: View {
 struct QuickCreateMenu_Preview: PreviewProvider {
     static var previews: some View {
         ZStack {
-            Color(hex: "1e1e2e")
+            Color(hex: "101012")
             
             QuickCreateMenu(
                 position: CGPoint(x: 200, y: 200),

@@ -28,7 +28,7 @@ struct PropertiesPanel: View {
                 }
             }
         }
-        .background(Color(hex: "16162a"))
+        .background(Color(hex: "0e0e10"))
     }
 }
 
@@ -170,7 +170,7 @@ struct DialoguePropertiesView: View {
                     .font(.system(size: 12))
                     .foregroundColor(.white.opacity(0.8))
             }
-            .toggleStyle(SwitchToggleStyle(tint: Color(hex: "7c3aed")))
+            .toggleStyle(SwitchToggleStyle(tint: Color(hex: "ff6633")))
         }
         .onAppear {
             text = data.text
@@ -197,7 +197,7 @@ struct ConditionPropertiesView: View {
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 6)
-                            .stroke(Color(hex: "10b981").opacity(0.3), lineWidth: 1)
+                            .stroke(Color(hex: "4ade80").opacity(0.3), lineWidth: 1)
                     )
             }
             
@@ -205,7 +205,7 @@ struct ConditionPropertiesView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Label("True → First output", systemImage: "checkmark.circle.fill")
                     .font(.system(size: 11))
-                    .foregroundColor(Color(hex: "10b981"))
+                    .foregroundColor(Color(hex: "4ade80"))
                 
                 Label("False → Second output", systemImage: "xmark.circle.fill")
                     .font(.system(size: 11))
@@ -385,7 +385,7 @@ struct SkillCheckPropertiesView: View {
     
     private var difficultyColor: Color {
         switch difficulty {
-        case 6...8: return Color(hex: "10b981")
+        case 6...8: return Color(hex: "4ade80")
         case 9...12: return Color(hex: "f59e0b")
         case 13...15: return Color(hex: "ef4444")
         default: return Color(hex: "dc2626")
@@ -527,7 +527,7 @@ struct QuickActionHint: View {
         HStack(spacing: 10) {
             Image(systemName: icon)
                 .font(.system(size: 12))
-                .foregroundColor(Color(hex: "7c3aed"))
+                .foregroundColor(Color(hex: "ff6633"))
                 .frame(width: 20)
             
             VStack(alignment: .leading, spacing: 1) {

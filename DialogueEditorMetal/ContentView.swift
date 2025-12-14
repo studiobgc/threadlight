@@ -91,7 +91,7 @@ struct ContentView: View {
                     .frame(minWidth: 280, maxWidth: 350)
             }
         }
-        .background(Color(hex: "1a1a2e"))
+        .background(Color(hex: "0a0a0c"))
         .preferredColorScheme(.dark)
     }
 }
@@ -185,7 +185,7 @@ struct NodePalette: View {
             }
             .padding(16)
         }
-        .background(Color(hex: "16162a"))
+        .background(Color(hex: "0e0e10"))
     }
 }
 
@@ -367,7 +367,7 @@ struct ShortcutsOverlay: View {
                 .buttonStyle(.plain)
             }
             .padding(16)
-            .background(Color(hex: "7c3aed"))
+            .background(Color(hex: "ff6633"))
             
             // Shortcuts list
             ScrollView {
@@ -384,7 +384,7 @@ struct ShortcutsOverlay: View {
             }
         }
         .frame(width: 320, height: 420)
-        .background(Color(hex: "1e1e2e"))
+        .background(Color(hex: "101012"))
         .cornerRadius(12)
         .shadow(color: .black.opacity(0.5), radius: 20)
     }
@@ -404,10 +404,10 @@ struct ShortcutRow: View {
             
             Text(key)
                 .font(.system(size: 11, weight: .medium, design: .monospaced))
-                .foregroundColor(Color(hex: "7c3aed"))
+                .foregroundColor(Color(hex: "ff6633"))
                 .padding(.horizontal, 6)
                 .padding(.vertical, 3)
-                .background(Color(hex: "7c3aed").opacity(0.15))
+                .background(Color(hex: "ff6633").opacity(0.15))
                 .cornerRadius(4)
                 .frame(width: 100, alignment: .leading)
             

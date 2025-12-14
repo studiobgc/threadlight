@@ -33,7 +33,7 @@ struct NodeEditorView: View {
                 }
             }
         }
-        .background(Color(hex: "1e1e2e"))
+        .background(Color(hex: "101012"))
     }
 }
 

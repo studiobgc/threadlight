@@ -191,7 +191,7 @@ struct WritingModeHeader: View {
             } label: {
                 Image(systemName: "book.closed")
                     .font(.system(size: 14))
-                    .foregroundColor(showLore ? Color(hex: "7c3aed") : .white.opacity(0.6))
+                    .foregroundColor(showLore ? Color(hex: "ff6633") : .white.opacity(0.6))
             }
             .buttonStyle(.plain)
         }
@@ -536,7 +536,7 @@ struct WritingEmptyState: View {
                 .padding(.vertical, 12)
                 .background(
                     RoundedRectangle(cornerRadius: 8)
-                        .fill(Color(hex: "7c3aed"))
+                        .fill(Color(hex: "ff6633"))
                 )
             }
             .buttonStyle(.plain)

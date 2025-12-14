@@ -207,7 +207,7 @@ extension View {
         modifier(HoverScaleEffect(scale: scale))
     }
     
-    func selectionGlow(isSelected: Bool, color: Color = Color(hex: "7c3aed")) -> some View {
+    func selectionGlow(isSelected: Bool, color: Color = Color(hex: "ff6633")) -> some View {
         modifier(SelectionGlow(isSelected: isSelected, color: color))
     }
     
@@ -369,10 +369,10 @@ struct SelectionBox: View {
         let height = abs(current.y - origin.y)
         
         Rectangle()
-            .fill(Color(hex: "7c3aed").opacity(0.1))
+            .fill(Color(hex: "ff6633").opacity(0.1))
             .overlay(
                 Rectangle()
-                    .stroke(Color(hex: "7c3aed"), style: StrokeStyle(lineWidth: 1, dash: [5, 3]))
+                    .stroke(Color(hex: "ff6633"), style: StrokeStyle(lineWidth: 1, dash: [5, 3]))
             )
             .frame(width: width, height: height)
             .position(x: minX + width / 2, y: minY + height / 2)
@@ -426,7 +426,7 @@ struct Toast: View {
         var color: Color {
             switch self {
             case .info: return Color(hex: "3b82f6")
-            case .success: return Color(hex: "10b981")
+            case .success: return Color(hex: "4ade80")
             case .warning: return Color(hex: "f59e0b")
             case .error: return Color(hex: "ef4444")
             }
@@ -455,7 +455,7 @@ struct Toast: View {
         .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(Color(hex: "1e1e2e"))
+                .fill(Color(hex: "101012"))
                 .shadow(color: .black.opacity(0.3), radius: 10, y: 5)
         )
         .overlay(
@@ -504,7 +504,7 @@ struct Tooltip: View {
         .padding(.vertical, 6)
         .background(
             RoundedRectangle(cornerRadius: 6)
-                .fill(Color(hex: "1e1e2e"))
+                .fill(Color(hex: "101012"))
                 .shadow(color: .black.opacity(0.4), radius: 8, y: 4)
         )
     }
@@ -551,7 +551,7 @@ struct CommandPalette: View {
                     .foregroundColor(.white)
             }
             .padding(12)
-            .background(Color(hex: "16162a"))
+            .background(Color(hex: "0e0e10"))
             
             Divider()
                 .background(Color.white.opacity(0.1))
@@ -571,7 +571,7 @@ struct CommandPalette: View {
             .frame(maxHeight: 300)
         }
         .frame(width: 350)
-        .background(Color(hex: "1e1e2e"))
+        .background(Color(hex: "101012"))
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .shadow(color: .black.opacity(0.5), radius: 30, y: 10)
         .overlay(

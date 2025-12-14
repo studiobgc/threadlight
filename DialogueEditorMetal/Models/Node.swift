@@ -48,7 +48,7 @@ enum NodeType: String, CaseIterable, Codable {
         case .branch:
             return Color(hex: "f59e0b")   // Amber - choices
         case .condition:
-            return Color(hex: "10b981")   // Emerald - logic
+            return Color(hex: "4ade80")   // Emerald - logic
         case .instruction:
             return Color(hex: "8b5cf6")   // Purple - scripts
         case .hub:
