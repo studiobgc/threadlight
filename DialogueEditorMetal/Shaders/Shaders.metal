@@ -141,61 +141,83 @@ fragment float4 nodeFragmentShader(
     float2 halfSize = in.size * 0.5;
     float2 center = pos - halfSize;
     
-    // SUSAN KARE 2030: Crisp, pixel-perfect edges
-    float cornerRadius = 4.0; // Smaller, tighter corners
+    // ARTICY-STYLE NODE DESIGN
+    // Rounded corners, drop shadow, colored header, clean body
+    float cornerRadius = 6.0;
     float dist = roundedBoxSDF(center, halfSize, cornerRadius);
+    float aa = fwidth(dist) * 1.0;
     
-    // Ultra-crisp edge (no blur)
-    float aa = fwidth(dist) * 0.8;
+    // DROP SHADOW (offset down-right, soft blur)
+    float2 shadowOffset = float2(4.0, 6.0);
+    float2 shadowCenter = center - shadowOffset;
+    float shadowDist = roundedBoxSDF(shadowCenter, halfSize, cornerRadius);
+    float shadow = smoothstep(12.0, 0.0, shadowDist) * 0.4;
+    
+    // Main shape
     float shape = smoothEdge(dist, aa);
     
-    if (shape < 0.001) {
+    // Early out for transparent areas (but keep shadow)
+    if (shape < 0.001 && shadow < 0.001) {
         discard_fragment();
     }
     
-    // UTILITARIAN: Flat header, no gradients
-    float headerHeight = 24.0; // Compact header
-    float headerMask = step(halfSize.y - headerHeight, -center.y);
+    // HEADER: Colored bar at top (28px)
+    float headerHeight = 28.0;
+    float headerY = halfSize.y - headerHeight;
+    float headerMask = smoothstep(headerY + 1.0, headerY - 1.0, -center.y);
     
-    // DESIGN SYSTEM: bg2 = #18181b
-    float4 bodyColor = float4(0.094, 0.094, 0.106, 1.0);
-    float4 headerColor = in.headerColor;
+    // BODY: Dark gray #1e1e22
+    float4 bodyColor = float4(0.118, 0.118, 0.133, 1.0);
+    
+    // Header gets the node type color (slightly darkened)
+    float4 headerColor = in.headerColor * 0.85;
+    headerColor.a = 1.0;
+    
     float4 baseColor = mix(bodyColor, headerColor, headerMask);
     
-    // MINIMAL CHROME: 1px border, high contrast
-    float borderWidth = 1.0;
+    // BORDER: Subtle dark border
+    float borderWidth = 1.5;
     float borderDist = abs(dist) - borderWidth * 0.5;
     float borderMask = smoothEdge(borderDist, aa * 0.5);
+    float4 borderColor = float4(0.08, 0.08, 0.09, 1.0); // Very dark
     
-    // DS border0: #27272a
-    float4 borderColor = float4(0.153, 0.153, 0.165, 1.0);
-    
-    // Selection: DS accent #f97316
+    // Selection: Bright orange border
     if (in.isSelected > 0.5) {
         borderColor = float4(0.976, 0.451, 0.086, 1.0);
-        borderWidth = 2.0;
+        borderWidth = 2.5;
     }
     
-    // Hover: DS border2 #52525b
+    // Hover: Lighter border
     if (in.isHovered > 0.5 && in.isSelected < 0.5) {
-        borderColor = float4(0.322, 0.322, 0.357, 1.0);
+        borderColor = float4(0.35, 0.35, 0.4, 1.0);
     }
     
-    // MICRO-ANIMATION: Subtle selection pulse (GPU-friendly)
+    // Selection glow pulse
     if (in.isSelected > 0.5) {
-        float pulse = 0.9 + 0.1 * sin(uniforms.time * 4.0);
+        float pulse = 0.92 + 0.08 * sin(uniforms.time * 3.0);
         borderColor.rgb *= pulse;
     }
     
-    // Clean combine - no blending tricks
-    float4 color = baseColor;
-    color = mix(color, borderColor, (1.0 - borderMask) * shape);
-    color.a = shape;
+    // Combine layers
+    float4 color = float4(0.0);
     
-    // Header divider line (1px, crisp)
+    // Shadow layer (behind node)
+    color = mix(color, float4(0.0, 0.0, 0.0, shadow), shadow);
+    
+    // Node body
+    color = mix(color, baseColor, shape);
+    
+    // Border on top
+    float borderAlpha = (1.0 - borderMask) * shape;
+    color = mix(color, borderColor, borderAlpha);
+    
+    // Header divider line
     float dividerY = halfSize.y - headerHeight;
-    float divider = smoothstep(0.5, -0.5, abs(center.y + dividerY) - 0.5);
-    color.rgb = mix(color.rgb, float3(0.2, 0.2, 0.22), divider * headerMask);
+    float divider = smoothstep(1.0, 0.0, abs(center.y + dividerY) - 0.5) * headerMask;
+    color.rgb = mix(color.rgb, float3(0.06, 0.06, 0.07), divider * 0.8);
+    
+    // Final alpha
+    color.a = max(shape, shadow * 0.5);
     
     return color;
 }

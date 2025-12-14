@@ -108,22 +108,24 @@ class CanvasMTKView: MTKView {
         return true
     }
     
-    // FIGMA: Cmd + scroll = ZOOM (scroll events still come through for this)
+    // FIGMA-STYLE TRACKPAD CONTROLS
+    // Two-finger scroll = PAN
+    // Cmd + two-finger scroll = ZOOM
+    // Pinch = ZOOM (handled by magnify gesture)
     override func scrollWheel(with event: NSEvent) {
         guard let coordinator = coordinator else { return }
         
-        // Only handle Cmd+scroll for zoom - two-finger pan is handled by gesture recognizer
+        let mouseInView = self.convert(event.locationInWindow, from: nil)
+        
         if event.modifierFlags.contains(.command) {
-            let mouseInView = self.convert(event.locationInWindow, from: nil)
+            // CMD + SCROLL = ZOOM towards cursor
             let oldZoom = coordinator.graphModel.viewportZoom
             let oldOffset = coordinator.graphModel.viewportOffset
             
-            // Zoom speed
             let zoomSpeed: CGFloat = 0.008
             let zoomDelta = 1.0 - (event.scrollingDeltaY * zoomSpeed)
             let newZoom = max(0.1, min(5.0, oldZoom * zoomDelta))
             
-            // Keep cursor position fixed
             let zoomRatio = newZoom / oldZoom
             let newOffset = CGPoint(
                 x: mouseInView.x - (mouseInView.x - oldOffset.x) * zoomRatio,
@@ -132,8 +134,12 @@ class CanvasMTKView: MTKView {
             
             coordinator.graphModel.viewportZoom = newZoom
             coordinator.graphModel.viewportOffset = newOffset
+        } else {
+            // TWO-FINGER SCROLL = PAN (no modifier key)
+            // scrollingDeltaX/Y are the scroll amounts in points
+            coordinator.graphModel.viewportOffset.x += event.scrollingDeltaX
+            coordinator.graphModel.viewportOffset.y += event.scrollingDeltaY
         }
-        // Note: Two-finger pan without Cmd is handled by handleTwoFingerPan gesture
     }
     
     override func keyDown(with event: NSEvent) {
@@ -438,9 +444,11 @@ extension MetalCanvas {
                 return
             }
             
-            // Otherwise, pan the canvas
-            isDraggingCanvas = true
-            dragStartPosition = screenPos
+            // Empty space click - just start selection box (no canvas drag)
+            // Pan is handled by two-finger scroll, not click-drag
+            isDrawingSelection = true
+            selectionStart = worldPos
+            selectionEnd = worldPos
         }
         
         private func handlePanChanged(to screenPos: CGPoint, worldPos: CGPoint, gesture: NSPanGestureRecognizer) {
