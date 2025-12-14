@@ -97,6 +97,67 @@ class CanvasMTKView: MTKView {
     
     override var acceptsFirstResponder: Bool { true }
     
+    // Ensure we receive scroll wheel events for swipe tracking
+    override func wantsScrollEventsForSwipeTracking(on axis: NSEvent.GestureAxis) -> Bool {
+        return true
+    }
+    
+    // Allow scroll events to pass through
+    override func scrollWheel(with event: NSEvent) {
+        // Forward to our custom handler
+        handleScrollWheel(event)
+    }
+    
+    private func handleScrollWheel(_ event: NSEvent) {
+        guard let coordinator = coordinator else { return }
+        
+        let mouseInWindow = event.locationInWindow
+        let mouseInView = self.convert(mouseInWindow, from: nil)
+        
+        // FIGMA CONTROLS:
+        // - Two-finger scroll = PAN
+        // - Cmd + scroll = ZOOM
+        // - Pinch = ZOOM
+        
+        let isPinchZoom = abs(event.magnification) > 0.001
+        let isCmdZoom = event.modifierFlags.contains(.command)
+        
+        if isPinchZoom {
+            // PINCH ZOOM
+            let oldZoom = coordinator.graphModel.viewportZoom
+            let oldOffset = coordinator.graphModel.viewportOffset
+            let zoomDelta = 1.0 + event.magnification
+            let newZoom = max(0.1, min(5.0, oldZoom * zoomDelta))
+            let zoomRatio = newZoom / oldZoom
+            let newOffset = CGPoint(
+                x: mouseInView.x - (mouseInView.x - oldOffset.x) * zoomRatio,
+                y: mouseInView.y - (mouseInView.y - oldOffset.y) * zoomRatio
+            )
+            coordinator.graphModel.viewportZoom = newZoom
+            coordinator.graphModel.viewportOffset = newOffset
+            
+        } else if isCmdZoom {
+            // CMD + SCROLL = ZOOM
+            let oldZoom = coordinator.graphModel.viewportZoom
+            let oldOffset = coordinator.graphModel.viewportOffset
+            let zoomSpeed: CGFloat = 0.01
+            let zoomDelta = 1.0 - (event.scrollingDeltaY * zoomSpeed)
+            let newZoom = max(0.1, min(5.0, oldZoom * zoomDelta))
+            let zoomRatio = newZoom / oldZoom
+            let newOffset = CGPoint(
+                x: mouseInView.x - (mouseInView.x - oldOffset.x) * zoomRatio,
+                y: mouseInView.y - (mouseInView.y - oldOffset.y) * zoomRatio
+            )
+            coordinator.graphModel.viewportZoom = newZoom
+            coordinator.graphModel.viewportOffset = newOffset
+            
+        } else {
+            // TWO-FINGER SCROLL = PAN
+            coordinator.graphModel.viewportOffset.x += event.scrollingDeltaX
+            coordinator.graphModel.viewportOffset.y += event.scrollingDeltaY
+        }
+    }
+    
     override func keyDown(with event: NSEvent) {
         // Handle keyboard shortcuts
         guard let coordinator = coordinator else {
@@ -184,65 +245,6 @@ class CanvasMTKView: MTKView {
     // Delete key
     override func deleteBackward(_ sender: Any?) {
         coordinator?.graphModel.deleteSelection()
-    }
-    
-    override func scrollWheel(with event: NSEvent) {
-        guard let coordinator = coordinator else { return }
-        
-        // Get mouse position in view coordinates
-        let mouseInWindow = event.locationInWindow
-        let mouseInView = self.convert(mouseInWindow, from: nil)
-        
-        // FIGMA CONTROLS (from official docs):
-        // - Two-finger scroll on trackpad = PAN (uses macOS natural scroll direction)
-        // - Cmd + scroll = ZOOM towards cursor
-        // - Pinch on trackpad = ZOOM towards cursor
-        
-        let isPinchZoom = abs(event.magnification) > 0.001
-        let isCmdZoom = event.modifierFlags.contains(.command) && abs(event.deltaY) > 0.1
-        
-        if isPinchZoom {
-            // PINCH ZOOM: Trackpad pinch gesture
-            let oldZoom = coordinator.graphModel.viewportZoom
-            let oldOffset = coordinator.graphModel.viewportOffset
-            
-            let zoomDelta = 1.0 + event.magnification
-            let newZoom = max(0.1, min(5.0, oldZoom * zoomDelta))
-            
-            // Keep mouse position fixed in world space
-            let zoomRatio = newZoom / oldZoom
-            let newOffset = CGPoint(
-                x: mouseInView.x - (mouseInView.x - oldOffset.x) * zoomRatio,
-                y: mouseInView.y - (mouseInView.y - oldOffset.y) * zoomRatio
-            )
-            
-            coordinator.graphModel.viewportZoom = newZoom
-            coordinator.graphModel.viewportOffset = newOffset
-            
-        } else if isCmdZoom {
-            // CMD + SCROLL: Zoom with scroll wheel/trackpad
-            let oldZoom = coordinator.graphModel.viewportZoom
-            let oldOffset = coordinator.graphModel.viewportOffset
-            
-            let zoomSpeed: CGFloat = 0.02
-            let zoomDelta = 1.0 - (event.scrollingDeltaY * zoomSpeed)
-            let newZoom = max(0.1, min(5.0, oldZoom * zoomDelta))
-            
-            let zoomRatio = newZoom / oldZoom
-            let newOffset = CGPoint(
-                x: mouseInView.x - (mouseInView.x - oldOffset.x) * zoomRatio,
-                y: mouseInView.y - (mouseInView.y - oldOffset.y) * zoomRatio
-            )
-            
-            coordinator.graphModel.viewportZoom = newZoom
-            coordinator.graphModel.viewportOffset = newOffset
-            
-        } else {
-            // TWO-FINGER SCROLL: Pan the canvas
-            // Follows macOS natural scroll direction setting
-            coordinator.graphModel.viewportOffset.x += event.scrollingDeltaX
-            coordinator.graphModel.viewportOffset.y += event.scrollingDeltaY
-        }
     }
 }
 

@@ -452,69 +452,76 @@ struct MultipleSelectionView: View {
 }
 
 struct EmptyPropertiesView: View {
+    @EnvironmentObject var graphModel: GraphModel
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            // Header
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Getting Started")
-                    .font(DS.Font.heading)
-                    .foregroundColor(.white.opacity(0.8))
-                
-                Text("Quick actions to build your dialogue")
-                    .font(.system(size: 11))
-                    .foregroundColor(.white.opacity(0.4))
+        VStack(alignment: .leading, spacing: DS.Space.lg) {
+            // Graph info
+            VStack(alignment: .leading, spacing: DS.Space.xs) {
+                DSLabel(text: "Graph")
+                Text(graphModel.graphInfo.name)
+                    .font(DS.Font.body)
+                    .foregroundColor(DS.Colors.text0)
             }
             
-            // Quick actions
-            VStack(alignment: .leading, spacing: 12) {
-                QuickActionHint(
-                    icon: "cursorarrow.click.2",
-                    action: "Double-click canvas",
-                    result: "Create dialogue node"
-                )
-                
-                QuickActionHint(
-                    icon: "arrow.right.circle",
-                    action: "Drag from port",
-                    result: "Connect nodes"
-                )
-                
-                QuickActionHint(
-                    icon: "keyboard",
-                    action: "D key",
-                    result: "Quick dialogue"
-                )
-                
-                QuickActionHint(
-                    icon: "hand.draw",
-                    action: "Space + drag",
-                    result: "Pan canvas"
-                )
-                
-                QuickActionHint(
-                    icon: "arrow.up.left.and.arrow.down.right",
-                    action: "Scroll / pinch",
-                    result: "Zoom"
-                )
+            DSDivider()
+            
+            // Stats
+            VStack(alignment: .leading, spacing: DS.Space.sm) {
+                DSLabel(text: "Stats")
+                HStack(spacing: DS.Space.xl) {
+                    StatItem(value: "\(graphModel.nodes.count)", label: "nodes")
+                    StatItem(value: "\(graphModel.connections.count)", label: "connections")
+                }
             }
             
-            Divider()
-                .background(Color.white.opacity(0.1))
+            DSDivider()
             
-            // Keyboard shortcuts
-            VStack(alignment: .leading, spacing: 8) {
-                Text("SHORTCUTS")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundColor(.white.opacity(0.4))
-                
-                ShortcutHint(keys: "⌘Z", action: "Undo")
-                ShortcutHint(keys: "⌘⇧Z", action: "Redo")
-                ShortcutHint(keys: "⌘D", action: "Duplicate")
-                ShortcutHint(keys: "⌫", action: "Delete")
-                ShortcutHint(keys: "⌘A", action: "Select all")
+            // Controls hint
+            VStack(alignment: .leading, spacing: DS.Space.sm) {
+                DSLabel(text: "Controls")
+                ControlHint(key: "Two-finger scroll", action: "Pan")
+                ControlHint(key: "Pinch", action: "Zoom")
+                ControlHint(key: "⌘ + scroll", action: "Zoom")
+                ControlHint(key: "D", action: "New dialogue")
             }
+            
+            Spacer()
         }
-        .padding(16)
+        .padding(DS.Space.lg)
+    }
+}
+
+struct StatItem: View {
+    let value: String
+    let label: String
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(value)
+                .font(DS.Font.heading)
+                .foregroundColor(DS.Colors.text0)
+            Text(label)
+                .font(DS.Font.caption)
+                .foregroundColor(DS.Colors.text2)
+        }
+    }
+}
+
+struct ControlHint: View {
+    let key: String
+    let action: String
+    
+    var body: some View {
+        HStack {
+            Text(key)
+                .font(DS.Font.code)
+                .foregroundColor(DS.Colors.text1)
+            Spacer()
+            Text(action)
+                .font(DS.Font.caption)
+                .foregroundColor(DS.Colors.text2)
+        }
     }
 }
 
