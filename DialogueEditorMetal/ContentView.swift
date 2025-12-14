@@ -203,70 +203,59 @@ struct PaletteItem: View {
     let name: String
     
     @State private var isHovered = false
-    @State private var showTooltip = false
     
     var body: some View {
         Button {
-            // Add node at center of viewport
-            let center = CGPoint(x: 400, y: 300)
-            graphModel.addNode(type: type, at: center)
+            // Add node at center of viewport (using world coordinates)
+            let worldCenter = CGPoint(
+                x: -graphModel.viewportOffset.x / graphModel.viewportZoom + 400 / graphModel.viewportZoom,
+                y: -graphModel.viewportOffset.y / graphModel.viewportZoom + 300 / graphModel.viewportZoom
+            )
+            graphModel.addNode(type: type, at: worldCenter)
         } label: {
-            VStack(alignment: .leading, spacing: 0) {
-                HStack(spacing: 10) {
-                    Image(systemName: icon)
-                        .font(.system(size: 14))
-                        .foregroundColor(type.color)
-                        .frame(width: 24)
-                    
-                    Text(name)
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(.white.opacity(0.9))
-                    
-                    Spacer()
-                    
-                    // Keyboard shortcut hint
-                    if let shortcut = type.keyboardShortcut {
-                        Text(shortcut)
-                            .font(.system(size: 10, weight: .medium, design: .monospaced))
-                            .foregroundColor(.white.opacity(0.4))
-                            .padding(.horizontal, 5)
-                            .padding(.vertical, 2)
-                            .background(RoundedRectangle(cornerRadius: 3).fill(Color.white.opacity(0.1)))
-                    }
-                    
-                    Image(systemName: "plus")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundColor(.white.opacity(isHovered ? 0.6 : 0))
-                }
+            HStack(spacing: 10) {
+                // Color indicator bar
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(type.color)
+                    .frame(width: 3, height: 20)
                 
-                // Tooltip description on hover
-                if isHovered {
-                    Text(type.description)
-                        .font(.system(size: 11))
-                        .foregroundColor(.white.opacity(0.5))
-                        .padding(.top, 6)
-                        .padding(.leading, 34)
-                        .transition(.opacity.combined(with: .move(edge: .top)))
+                Image(systemName: icon)
+                    .font(.system(size: 13))
+                    .foregroundColor(type.color)
+                    .frame(width: 20)
+                
+                Text(name)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.white.opacity(0.85))
+                
+                Spacer()
+                
+                // Keyboard shortcut hint (always visible, no layout shift)
+                if let shortcut = type.keyboardShortcut {
+                    Text(shortcut)
+                        .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.35))
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 2)
+                        .background(RoundedRectangle(cornerRadius: 3).fill(Color.white.opacity(0.08)))
                 }
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
             .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(isHovered ? Color.white.opacity(0.08) : Color.clear)
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(isHovered ? Color.white.opacity(0.06) : Color.clear)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(isHovered ? type.color.opacity(0.3) : Color.clear, lineWidth: 1)
+                RoundedRectangle(cornerRadius: 6)
+                    .stroke(isHovered ? type.color.opacity(0.25) : Color.clear, lineWidth: 1)
             )
         }
         .buttonStyle(.plain)
         .onHover { hovering in
-            withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
-                isHovered = hovering
-            }
+            isHovered = hovering
         }
-        .help(type.fullDescription) // Native macOS tooltip
+        .help(type.fullDescription)
     }
 }
 

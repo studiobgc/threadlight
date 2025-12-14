@@ -453,22 +453,111 @@ struct MultipleSelectionView: View {
 
 struct EmptyPropertiesView: View {
     var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "cursorarrow.click.2")
-                .font(.system(size: 32))
-                .foregroundColor(.white.opacity(0.3))
+        VStack(alignment: .leading, spacing: 20) {
+            // Header
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Getting Started")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.8))
+                
+                Text("Quick actions to build your dialogue")
+                    .font(.system(size: 11))
+                    .foregroundColor(.white.opacity(0.4))
+            }
             
-            Text("No selection")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.white.opacity(0.6))
+            // Quick actions
+            VStack(alignment: .leading, spacing: 12) {
+                QuickActionHint(
+                    icon: "cursorarrow.click.2",
+                    action: "Double-click canvas",
+                    result: "Create dialogue node"
+                )
+                
+                QuickActionHint(
+                    icon: "arrow.right.circle",
+                    action: "Drag from port",
+                    result: "Connect nodes"
+                )
+                
+                QuickActionHint(
+                    icon: "keyboard",
+                    action: "D key",
+                    result: "Quick dialogue"
+                )
+                
+                QuickActionHint(
+                    icon: "hand.draw",
+                    action: "Space + drag",
+                    result: "Pan canvas"
+                )
+                
+                QuickActionHint(
+                    icon: "arrow.up.left.and.arrow.down.right",
+                    action: "Scroll / pinch",
+                    result: "Zoom"
+                )
+            }
             
-            Text("Click a node to view and edit its properties")
-                .font(.system(size: 12))
-                .foregroundColor(.white.opacity(0.4))
-                .multilineTextAlignment(.center)
+            Divider()
+                .background(Color.white.opacity(0.1))
+            
+            // Keyboard shortcuts
+            VStack(alignment: .leading, spacing: 8) {
+                Text("SHORTCUTS")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.4))
+                
+                ShortcutHint(keys: "⌘Z", action: "Undo")
+                ShortcutHint(keys: "⌘⇧Z", action: "Redo")
+                ShortcutHint(keys: "⌘D", action: "Duplicate")
+                ShortcutHint(keys: "⌫", action: "Delete")
+                ShortcutHint(keys: "⌘A", action: "Select all")
+            }
         }
-        .frame(maxWidth: .infinity)
-        .padding(32)
+        .padding(16)
+    }
+}
+
+struct QuickActionHint: View {
+    let icon: String
+    let action: String
+    let result: String
+    
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 12))
+                .foregroundColor(Color(hex: "7c3aed"))
+                .frame(width: 20)
+            
+            VStack(alignment: .leading, spacing: 1) {
+                Text(action)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(.white.opacity(0.7))
+                
+                Text(result)
+                    .font(.system(size: 10))
+                    .foregroundColor(.white.opacity(0.4))
+            }
+        }
+    }
+}
+
+struct ShortcutHint: View {
+    let keys: String
+    let action: String
+    
+    var body: some View {
+        HStack {
+            Text(keys)
+                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                .foregroundColor(.white.opacity(0.5))
+                .frame(width: 44, alignment: .leading)
+            
+            Text(action)
+                .font(.system(size: 11))
+                .foregroundColor(.white.opacity(0.6))
+        }
     }
 }
 

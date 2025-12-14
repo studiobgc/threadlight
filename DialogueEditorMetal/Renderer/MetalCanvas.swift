@@ -397,7 +397,7 @@ extension MetalCanvas {
         
         private func handlePanEnded(at screenPos: CGPoint, worldPos: CGPoint) {
             if isDrawingConnection {
-                // Try to complete connection
+                // Try to complete connection to existing port
                 if let portHit = hitTestPort(at: worldPos),
                    let start = connectionStart,
                    portHit.portType == .input {
@@ -407,6 +407,12 @@ extension MetalCanvas {
                         to: portHit.nodeId,
                         toPort: portHit.portIndex
                     )
+                } else if let start = connectionStart, hitTestNode(at: worldPos) == nil {
+                    // articy:draft style: Dropping connection on empty space creates a connected node
+                    if let newNode = graphModel.createConnectedNode(from: start.nodeId, type: .dialogue) {
+                        // Position the new node at drop location
+                        graphModel.updateNodePosition(newNode.id, to: worldPos)
+                    }
                 }
             } else if isDrawingSelection {
                 // Select nodes in box
@@ -435,8 +441,15 @@ extension MetalCanvas {
             let location = gesture.location(in: view)
             let worldPos = screenToWorld(location)
             
+            // Ctrl+Shift+Click = Quick create node (articy:draft style)
+            let modifiers = NSEvent.modifierFlags
+            if modifiers.contains(.control) && modifiers.contains(.shift) {
+                graphModel.addNode(type: .dialogue, at: worldPos)
+                return
+            }
+            
             if let node = hitTestNode(at: worldPos) {
-                let addToSelection = NSEvent.modifierFlags.contains(.shift)
+                let addToSelection = modifiers.contains(.shift)
                 graphModel.selectNode(node.id, addToSelection: addToSelection)
             } else if let connection = hitTestConnection(at: worldPos) {
                 graphModel.selectConnection(connection.id)

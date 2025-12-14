@@ -102,17 +102,21 @@ class GraphModel: ObservableObject {
     // MARK: - Node Operations
     
     @discardableResult
-    func addNode(type: NodeType, at position: CGPoint, name: String? = nil) -> DialogueNode {
+    func addNode(type: NodeType, at worldPosition: CGPoint, name: String? = nil) -> DialogueNode {
         saveUndoState()
         
-        // Convert screen position to world position
-        let worldPos = screenToWorld(position)
-        let node = DialogueNode(type: type, position: worldPos, name: name)
+        // Position is already in world coordinates - do NOT convert
+        let node = DialogueNode(type: type, position: worldPosition, name: name)
         nodes.append(node)
         graphInfo.modifiedAt = Date()
         
         // Auto-select new node
         selectedNodeIds = [node.id]
+        
+        // Update selection state
+        for n in nodes {
+            n.isSelected = n.id == node.id
+        }
         
         return node
     }
