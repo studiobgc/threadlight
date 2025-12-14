@@ -193,33 +193,23 @@ class CanvasMTKView: MTKView {
         let mouseInWindow = event.locationInWindow
         let mouseInView = self.convert(mouseInWindow, from: nil)
         
-        // Figma-style: Cmd+scroll or pinch = zoom towards cursor
-        // Regular scroll = pan (with smooth multiplier)
-        let isZooming = event.modifierFlags.contains(.command) || 
-                        event.modifierFlags.contains(.control) ||
-                        abs(event.magnification) > 0.001
+        // FIGMA CONTROLS (from official docs):
+        // - Two-finger scroll on trackpad = PAN (uses macOS natural scroll direction)
+        // - Cmd + scroll = ZOOM towards cursor
+        // - Pinch on trackpad = ZOOM towards cursor
         
-        if isZooming {
-            // FIGMA-STYLE CURSOR-CENTERED ZOOM
-            // Formula: newOffset = mousePos - (mousePos - oldOffset) * (newZoom / oldZoom)
-            
+        let isPinchZoom = abs(event.magnification) > 0.001
+        let isCmdZoom = event.modifierFlags.contains(.command) && abs(event.deltaY) > 0.1
+        
+        if isPinchZoom {
+            // PINCH ZOOM: Trackpad pinch gesture
             let oldZoom = coordinator.graphModel.viewportZoom
             let oldOffset = coordinator.graphModel.viewportOffset
             
-            // Calculate zoom factor (smoother steps)
-            let zoomSpeed: CGFloat = 0.08
-            let zoomDelta: CGFloat
-            if abs(event.magnification) > 0.001 {
-                // Trackpad pinch
-                zoomDelta = 1.0 + event.magnification
-            } else {
-                // Scroll wheel
-                zoomDelta = 1.0 - (event.deltaY * zoomSpeed)
-            }
+            let zoomDelta = 1.0 + event.magnification
+            let newZoom = max(0.1, min(5.0, oldZoom * zoomDelta))
             
-            let newZoom = max(0.05, min(10.0, oldZoom * zoomDelta))
-            
-            // Calculate new offset to keep mouse position fixed in world space
+            // Keep mouse position fixed in world space
             let zoomRatio = newZoom / oldZoom
             let newOffset = CGPoint(
                 x: mouseInView.x - (mouseInView.x - oldOffset.x) * zoomRatio,
@@ -228,13 +218,30 @@ class CanvasMTKView: MTKView {
             
             coordinator.graphModel.viewportZoom = newZoom
             coordinator.graphModel.viewportOffset = newOffset
+            
+        } else if isCmdZoom {
+            // CMD + SCROLL: Zoom with scroll wheel/trackpad
+            let oldZoom = coordinator.graphModel.viewportZoom
+            let oldOffset = coordinator.graphModel.viewportOffset
+            
+            let zoomSpeed: CGFloat = 0.02
+            let zoomDelta = 1.0 - (event.scrollingDeltaY * zoomSpeed)
+            let newZoom = max(0.1, min(5.0, oldZoom * zoomDelta))
+            
+            let zoomRatio = newZoom / oldZoom
+            let newOffset = CGPoint(
+                x: mouseInView.x - (mouseInView.x - oldOffset.x) * zoomRatio,
+                y: mouseInView.y - (mouseInView.y - oldOffset.y) * zoomRatio
+            )
+            
+            coordinator.graphModel.viewportZoom = newZoom
+            coordinator.graphModel.viewportOffset = newOffset
+            
         } else {
-            // FIGMA-STYLE PAN: Two-finger scroll moves canvas
-            // scrollingDeltaX/Y follow macOS natural scrolling
-            // Positive deltaY = scroll down = canvas moves up = offset increases
-            let panSpeed: CGFloat = 1.0
-            coordinator.graphModel.viewportOffset.x += event.scrollingDeltaX * panSpeed
-            coordinator.graphModel.viewportOffset.y += event.scrollingDeltaY * panSpeed
+            // TWO-FINGER SCROLL: Pan the canvas
+            // Follows macOS natural scroll direction setting
+            coordinator.graphModel.viewportOffset.x += event.scrollingDeltaX
+            coordinator.graphModel.viewportOffset.y += event.scrollingDeltaY
         }
     }
 }
