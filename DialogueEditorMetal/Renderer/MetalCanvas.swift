@@ -229,9 +229,10 @@ class CanvasMTKView: MTKView {
             coordinator.graphModel.viewportZoom = newZoom
             coordinator.graphModel.viewportOffset = newOffset
         } else {
-            // FIGMA-STYLE SMOOTH PAN
-            // Natural scroll direction, responsive multiplier
-            let panSpeed: CGFloat = 1.5
+            // FIGMA-STYLE PAN: Two-finger scroll moves canvas
+            // scrollingDeltaX/Y follow macOS natural scrolling
+            // Positive deltaY = scroll down = canvas moves up = offset increases
+            let panSpeed: CGFloat = 1.0
             coordinator.graphModel.viewportOffset.x += event.scrollingDeltaX * panSpeed
             coordinator.graphModel.viewportOffset.y += event.scrollingDeltaY * panSpeed
         }

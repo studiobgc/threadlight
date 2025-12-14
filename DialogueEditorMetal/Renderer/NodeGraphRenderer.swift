@@ -145,14 +145,18 @@ class NodeGraphRenderer {
     }
     
     private func setupBuffers() {
-        // Node quad vertices (unit quad, transformed per-instance)
-        let nodeVertices: [SIMD2<Float>] = [
-            SIMD2(0, 0), SIMD2(1, 0), SIMD2(0, 1),
-            SIMD2(0, 1), SIMD2(1, 0), SIMD2(1, 1)
+        // Node quad vertices - must match NodeVertex struct (position, texCoord, color)
+        let nodeVertices: [NodeVertex] = [
+            NodeVertex(position: SIMD2(0, 0), texCoord: SIMD2(0, 0), color: SIMD4(1, 1, 1, 1)),
+            NodeVertex(position: SIMD2(1, 0), texCoord: SIMD2(1, 0), color: SIMD4(1, 1, 1, 1)),
+            NodeVertex(position: SIMD2(0, 1), texCoord: SIMD2(0, 1), color: SIMD4(1, 1, 1, 1)),
+            NodeVertex(position: SIMD2(0, 1), texCoord: SIMD2(0, 1), color: SIMD4(1, 1, 1, 1)),
+            NodeVertex(position: SIMD2(1, 0), texCoord: SIMD2(1, 0), color: SIMD4(1, 1, 1, 1)),
+            NodeVertex(position: SIMD2(1, 1), texCoord: SIMD2(1, 1), color: SIMD4(1, 1, 1, 1))
         ]
         nodeVertexBuffer = device.makeBuffer(
             bytes: nodeVertices,
-            length: MemoryLayout<SIMD2<Float>>.stride * nodeVertices.count,
+            length: MemoryLayout<NodeVertex>.stride * nodeVertices.count,
             options: .storageModeShared
         )
         
