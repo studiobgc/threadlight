@@ -8,6 +8,7 @@ struct ContentView: View {
     @State private var showingInlineEditor = false
     @State private var inlineEditorNode: DialogueNode?
     @State private var inlineEditorPosition: CGPoint = .zero
+    @State private var showingShortcuts = false
     
     var body: some View {
         ZStack {
@@ -16,6 +17,14 @@ struct ContentView: View {
                 WritingModeView(isWritingMode: $isWritingMode)
             } else {
                 mainEditorView
+            }
+            
+            // Shortcuts overlay (press ? to show)
+            if showingShortcuts {
+                Color.black.opacity(0.4)
+                    .ignoresSafeArea()
+                    .onTapGesture { showingShortcuts = false }
+                ShortcutsOverlay(isShowing: $showingShortcuts)
             }
             
             // Inline editor overlay
@@ -313,3 +322,99 @@ struct ContentView_Previews: PreviewProvider {
     }
 }
 #endif
+// MARK: - Keyboard Shortcuts Overlay
+
+struct ShortcutsOverlay: View {
+    @Binding var isShowing: Bool
+    
+    let shortcuts: [(String, String, String)] = [
+        // Category, Key, Action
+        ("CREATE", "D", "New Dialogue"),
+        ("CREATE", "B", "New Branch"),
+        ("CREATE", "C", "New Condition"),
+        ("", "", ""),
+        ("NAVIGATE", "Arrow Keys", "Nudge / Pan"),
+        ("NAVIGATE", "Space + Drag", "Pan canvas"),
+        ("NAVIGATE", "Scroll", "Pan"),
+        ("NAVIGATE", "⌘ + Scroll", "Zoom"),
+        ("NAVIGATE", "Pinch", "Zoom"),
+        ("", "", ""),
+        ("EDIT", "⌘Z", "Undo"),
+        ("EDIT", "⌘⇧Z", "Redo"),
+        ("EDIT", "⌘A", "Select All"),
+        ("EDIT", "⌘D", "Duplicate"),
+        ("EDIT", "Delete", "Delete selected"),
+        ("", "", ""),
+        ("WORKFLOW", "⌃⇧1", "Smart Create (connected node)"),
+        ("WORKFLOW", "⌥←/→", "Jump to connected node"),
+    ]
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Text("KEYBOARD SHORTCUTS")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundColor(.white)
+                Spacer()
+                Text("Press ? to toggle")
+                    .font(.system(size: 11))
+                    .foregroundColor(.white.opacity(0.5))
+                Button { isShowing = false } label: {
+                    Image(systemName: "xmark")
+                        .foregroundColor(.white.opacity(0.6))
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(16)
+            .background(Color(hex: "7c3aed"))
+            
+            // Shortcuts list
+            ScrollView {
+                VStack(alignment: .leading, spacing: 2) {
+                    ForEach(Array(shortcuts.enumerated()), id: \.offset) { _, shortcut in
+                        if shortcut.0.isEmpty {
+                            Divider().padding(.vertical, 8)
+                        } else {
+                            ShortcutRow(category: shortcut.0, key: shortcut.1, action: shortcut.2)
+                        }
+                    }
+                }
+                .padding(16)
+            }
+        }
+        .frame(width: 320, height: 420)
+        .background(Color(hex: "1e1e2e"))
+        .cornerRadius(12)
+        .shadow(color: .black.opacity(0.5), radius: 20)
+    }
+}
+
+struct ShortcutRow: View {
+    let category: String
+    let key: String
+    let action: String
+    
+    var body: some View {
+        HStack {
+            Text(category)
+                .font(.system(size: 9, weight: .semibold))
+                .foregroundColor(.white.opacity(0.4))
+                .frame(width: 70, alignment: .leading)
+            
+            Text(key)
+                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                .foregroundColor(Color(hex: "7c3aed"))
+                .padding(.horizontal, 6)
+                .padding(.vertical, 3)
+                .background(Color(hex: "7c3aed").opacity(0.15))
+                .cornerRadius(4)
+                .frame(width: 100, alignment: .leading)
+            
+            Text(action)
+                .font(.system(size: 12))
+                .foregroundColor(.white.opacity(0.8))
+        }
+        .padding(.vertical, 4)
+    }
+}
