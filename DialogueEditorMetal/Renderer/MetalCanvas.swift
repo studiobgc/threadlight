@@ -177,15 +177,51 @@ class CanvasMTKView: MTKView {
     override func scrollWheel(with event: NSEvent) {
         guard let coordinator = coordinator else { return }
         
-        // Pinch-to-zoom on trackpad or Cmd+scroll
-        if event.modifierFlags.contains(.command) || abs(event.magnification) > 0 {
-            let zoomDelta = event.deltaY > 0 ? 1.1 : 0.9
-            let newZoom = max(0.1, min(5.0, coordinator.graphModel.viewportZoom * zoomDelta))
+        // Get mouse position in view coordinates
+        let mouseInWindow = event.locationInWindow
+        let mouseInView = self.convert(mouseInWindow, from: nil)
+        
+        // Figma-style: Cmd+scroll or pinch = zoom towards cursor
+        // Regular scroll = pan (with smooth multiplier)
+        let isZooming = event.modifierFlags.contains(.command) || 
+                        event.modifierFlags.contains(.control) ||
+                        abs(event.magnification) > 0.001
+        
+        if isZooming {
+            // FIGMA-STYLE CURSOR-CENTERED ZOOM
+            // Formula: newOffset = mousePos - (mousePos - oldOffset) * (newZoom / oldZoom)
+            
+            let oldZoom = coordinator.graphModel.viewportZoom
+            let oldOffset = coordinator.graphModel.viewportOffset
+            
+            // Calculate zoom factor (smoother steps)
+            let zoomSpeed: CGFloat = 0.08
+            let zoomDelta: CGFloat
+            if abs(event.magnification) > 0.001 {
+                // Trackpad pinch
+                zoomDelta = 1.0 + event.magnification
+            } else {
+                // Scroll wheel
+                zoomDelta = 1.0 - (event.deltaY * zoomSpeed)
+            }
+            
+            let newZoom = max(0.05, min(10.0, oldZoom * zoomDelta))
+            
+            // Calculate new offset to keep mouse position fixed in world space
+            let zoomRatio = newZoom / oldZoom
+            let newOffset = CGPoint(
+                x: mouseInView.x - (mouseInView.x - oldOffset.x) * zoomRatio,
+                y: mouseInView.y - (mouseInView.y - oldOffset.y) * zoomRatio
+            )
+            
             coordinator.graphModel.viewportZoom = newZoom
+            coordinator.graphModel.viewportOffset = newOffset
         } else {
-            // Pan with scroll
-            coordinator.graphModel.viewportOffset.x += event.deltaX * 2
-            coordinator.graphModel.viewportOffset.y += event.deltaY * 2
+            // FIGMA-STYLE SMOOTH PAN
+            // Natural scroll direction, responsive multiplier
+            let panSpeed: CGFloat = 1.5
+            coordinator.graphModel.viewportOffset.x += event.scrollingDeltaX * panSpeed
+            coordinator.graphModel.viewportOffset.y += event.scrollingDeltaY * panSpeed
         }
     }
 }
@@ -431,8 +467,26 @@ extension MetalCanvas {
         }
         
         @objc func handleMagnify(_ gesture: NSMagnificationGestureRecognizer) {
-            let newZoom = graphModel.viewportZoom * (1 + gesture.magnification)
-            graphModel.viewportZoom = max(0.1, min(5.0, newZoom))
+            guard let view = gesture.view else { return }
+            
+            // Get pinch center position
+            let mouseInView = gesture.location(in: view)
+            
+            let oldZoom = graphModel.viewportZoom
+            let oldOffset = graphModel.viewportOffset
+            
+            // Calculate new zoom
+            let newZoom = max(0.05, min(10.0, oldZoom * (1 + gesture.magnification)))
+            
+            // Figma-style cursor-centered zoom
+            let zoomRatio = newZoom / oldZoom
+            let newOffset = CGPoint(
+                x: mouseInView.x - (mouseInView.x - oldOffset.x) * zoomRatio,
+                y: mouseInView.y - (mouseInView.y - oldOffset.y) * zoomRatio
+            )
+            
+            graphModel.viewportZoom = newZoom
+            graphModel.viewportOffset = newOffset
             gesture.magnification = 0
         }
         
