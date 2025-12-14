@@ -51,8 +51,8 @@ fragment float4 gridFragmentShader(
     float2 worldPos = in.worldPos;
     float zoom = uniforms.zoom;
     
-    // KARE 2030: Deep, matte black background
-    float4 color = float4(0.08, 0.08, 0.09, 1.0);
+    // DESIGN SYSTEM: bg0 = #09090b (deepest black)
+    float4 color = float4(0.035, 0.035, 0.043, 1.0);
     
     // Fade grid at low zoom
     if (zoom < 0.15) {
@@ -80,8 +80,8 @@ fragment float4 gridFragmentShader(
     float originY = smoothstep(originWidth, 0, abs(worldPos.y));
     float origin = max(originX, originY);
     
-    // Warm accent for origin
-    float4 originColor = float4(1.0, 0.4, 0.2, 1.0);
+    // DS accent: #f97316 (orange)
+    float4 originColor = float4(0.976, 0.451, 0.086, 1.0);
     color = mix(color, originColor, origin * 0.5 * saturate(zoom));
     
     return color;
@@ -157,8 +157,8 @@ fragment float4 nodeFragmentShader(
     float headerHeight = 24.0; // Compact header
     float headerMask = step(halfSize.y - headerHeight, -center.y);
     
-    // HIGH CONTRAST: Pure flat colors
-    float4 bodyColor = float4(0.12, 0.12, 0.14, 1.0);  // Near-black body
+    // DESIGN SYSTEM: bg2 = #18181b
+    float4 bodyColor = float4(0.094, 0.094, 0.106, 1.0);
     float4 headerColor = in.headerColor;
     float4 baseColor = mix(bodyColor, headerColor, headerMask);
     
@@ -167,18 +167,18 @@ fragment float4 nodeFragmentShader(
     float borderDist = abs(dist) - borderWidth * 0.5;
     float borderMask = smoothEdge(borderDist, aa * 0.5);
     
-    // Default border: subtle
-    float4 borderColor = float4(0.25, 0.25, 0.28, 1.0);
+    // DS border0: #27272a
+    float4 borderColor = float4(0.153, 0.153, 0.165, 1.0);
     
-    // Selection: bright accent (not purple glow - just solid line)
+    // Selection: DS accent #f97316
     if (in.isSelected > 0.5) {
-        borderColor = float4(1.0, 0.4, 0.2, 1.0); // Warm orange accent
+        borderColor = float4(0.976, 0.451, 0.086, 1.0);
         borderWidth = 2.0;
     }
     
-    // Hover: slight brighten
+    // Hover: DS border2 #52525b
     if (in.isHovered > 0.5 && in.isSelected < 0.5) {
-        borderColor = float4(0.4, 0.4, 0.45, 1.0);
+        borderColor = float4(0.322, 0.322, 0.357, 1.0);
     }
     
     // MICRO-ANIMATION: Subtle selection pulse (GPU-friendly)

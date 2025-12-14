@@ -286,17 +286,19 @@ class NodeGraphRenderer {
             let isSelected = selectedNodeIds.contains(node.id)
             let isHovered = hoveredNodeId == node.id
             
+            // DESIGN SYSTEM COLORS (Susan Kare 2030)
+            // bg2: #18181b, accent: #f97316, border: #27272a
             let instance = NodeInstanceData(
                 transform: transform,
-                backgroundColor: SIMD4<Float>(0.165, 0.165, 0.243, 1.0),
+                backgroundColor: SIMD4<Float>(0.094, 0.094, 0.106, 1.0),  // #18181b
                 headerColor: nodeColor,
-                borderColor: isSelected ? SIMD4<Float>(0.486, 0.227, 0.929, 1.0) :
-                            isHovered ? SIMD4<Float>(0.655, 0.545, 0.98, 1.0) :
-                            SIMD4<Float>(0.29, 0.29, 0.416, 1.0),
+                borderColor: isSelected ? SIMD4<Float>(0.976, 0.451, 0.086, 1.0) :  // #f97316 orange
+                            isHovered ? SIMD4<Float>(0.6, 0.4, 0.2, 1.0) :
+                            SIMD4<Float>(0.153, 0.153, 0.165, 1.0),  // #27272a
                 size: SIMD2<Float>(Float(node.size.width), Float(node.size.height)),
-                cornerRadius: 10,
-                borderWidth: isSelected ? 3 : 2,
-                glowIntensity: isSelected ? 1.0 : 0.0,
+                cornerRadius: 4,  // Tighter corners (Kare style)
+                borderWidth: isSelected ? 2 : 1,
+                glowIntensity: 0.0,  // No glow - utilitarian
                 isSelected: isSelected ? 1.0 : 0.0,
                 isHovered: isHovered ? 1.0 : 0.0,
                 padding: 0

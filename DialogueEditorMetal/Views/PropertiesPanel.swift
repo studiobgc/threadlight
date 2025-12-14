@@ -8,7 +8,7 @@ struct PropertiesPanel: View {
             // Header
             HStack {
                 Text("PROPERTIES")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(DS.Font.label)
                     .foregroundColor(.white.opacity(0.5))
                 Spacer()
             }
@@ -28,7 +28,7 @@ struct PropertiesPanel: View {
                 }
             }
         }
-        .background(Color(hex: "0e0e10"))
+        .background(DS.Colors.bg1)
     }
 }
 
@@ -46,11 +46,11 @@ struct NodePropertiesView: View {
                 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(node.nodeType.rawValue.capitalized)
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(DS.Font.heading)
                         .foregroundColor(.white)
                     
                     Text(node.technicalName)
-                        .font(.system(size: 11, design: .monospaced))
+                        .font(DS.Font.code)
                         .foregroundColor(.white.opacity(0.5))
                 }
                 
@@ -457,7 +457,7 @@ struct EmptyPropertiesView: View {
             // Header
             VStack(alignment: .leading, spacing: 4) {
                 Text("Getting Started")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(DS.Font.heading)
                     .foregroundColor(.white.opacity(0.8))
                 
                 Text("Quick actions to build your dialogue")

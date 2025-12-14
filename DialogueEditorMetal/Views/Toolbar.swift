@@ -44,7 +44,7 @@ struct EditorToolbar: View {
                     .foregroundColor(.white.opacity(0.5))
                 
                 Text(graphModel.graphInfo.name)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(DS.Font.bodyMedium)
                     .foregroundColor(.white.opacity(0.9))
             }
             
@@ -68,7 +68,7 @@ struct EditorToolbar: View {
                     .padding(.vertical, 6)
                     .background(
                         RoundedRectangle(cornerRadius: 6)
-                            .fill(Color(hex: "ff6633"))
+                            .fill(DS.Colors.accent)
                     )
                 }
                 .buttonStyle(.plain)
@@ -97,7 +97,7 @@ struct EditorToolbar: View {
         }
         .padding(.horizontal, 12)
         .frame(height: 44)
-        .background(Color(hex: "0e0e10"))
+        .background(DS.Colors.bg1)
         .overlay(
             Rectangle()
                 .fill(Color.white.opacity(0.05))
@@ -150,11 +150,11 @@ struct ToolbarToggle: View {
         } label: {
             Image(systemName: icon)
                 .font(.system(size: 14, weight: .medium))
-                .foregroundColor(isOn ? Color(hex: "ff6633") : .white.opacity(isHovered ? 0.9 : 0.6))
+                .foregroundColor(isOn ? DS.Colors.accent : .white.opacity(isHovered ? 0.9 : 0.6))
                 .frame(width: 32, height: 32)
                 .background(
                     RoundedRectangle(cornerRadius: 6)
-                        .fill(isOn ? Color(hex: "ff6633").opacity(0.2) : (isHovered ? Color.white.opacity(0.1) : Color.clear))
+                        .fill(isOn ? DS.Colors.accent.opacity(0.2) : (isHovered ? Color.white.opacity(0.1) : Color.clear))
                 )
         }
         .buttonStyle(.plain)
