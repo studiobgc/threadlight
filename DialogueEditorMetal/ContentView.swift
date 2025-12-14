@@ -91,7 +91,7 @@ struct ContentView: View {
                     .frame(minWidth: 280, maxWidth: 350)
             }
         }
-        .background(Color(hex: "0a0a0c"))
+        .background(DS.Colors.bg0)
         .preferredColorScheme(.dark)
     }
 }
@@ -127,8 +127,8 @@ struct NodePalette: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("NODES")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundColor(.white.opacity(0.5))
+                .font(DS.Font.label)
+                .foregroundColor(DS.Colors.text2)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
             
@@ -172,8 +172,8 @@ struct NodePalette: View {
             // Quick stats
             VStack(alignment: .leading, spacing: 8) {
                 Text("GRAPH")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(.white.opacity(0.5))
+                    .font(DS.Font.label)
+                    .foregroundColor(DS.Colors.text2)
                 
                 HStack {
                     Label("\(graphModel.nodes.count)", systemImage: "square.stack.3d.up")
@@ -185,7 +185,7 @@ struct NodePalette: View {
             }
             .padding(16)
         }
-        .background(Color(hex: "0e0e10"))
+        .background(DS.Colors.bg1)
     }
 }
 
@@ -194,11 +194,11 @@ struct PaletteSection<Content: View>: View {
     @ViewBuilder let content: Content
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: DS.Space.xs) {
             Text(title)
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundColor(.white.opacity(0.4))
-                .padding(.horizontal, 4)
+                .font(DS.Font.label)
+                .foregroundColor(DS.Colors.text3)
+                .padding(.horizontal, DS.Space.xs)
             
             content
         }
@@ -215,55 +215,36 @@ struct PaletteItem: View {
     
     var body: some View {
         Button {
-            // Add node at center of viewport (using world coordinates)
             let worldCenter = CGPoint(
                 x: -graphModel.viewportOffset.x / graphModel.viewportZoom + 400 / graphModel.viewportZoom,
                 y: -graphModel.viewportOffset.y / graphModel.viewportZoom + 300 / graphModel.viewportZoom
             )
             graphModel.addNode(type: type, at: worldCenter)
         } label: {
-            HStack(spacing: 10) {
-                // Color indicator bar
-                RoundedRectangle(cornerRadius: 2)
+            HStack(spacing: DS.Space.sm) {
+                // Color dot
+                Circle()
                     .fill(type.color)
-                    .frame(width: 3, height: 20)
-                
-                Image(systemName: icon)
-                    .font(.system(size: 13))
-                    .foregroundColor(type.color)
-                    .frame(width: 20)
+                    .frame(width: 6, height: 6)
                 
                 Text(name)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.white.opacity(0.85))
+                    .font(DS.Font.body)
+                    .foregroundColor(isHovered ? DS.Colors.text0 : DS.Colors.text1)
                 
                 Spacer()
                 
-                // Keyboard shortcut hint (always visible, no layout shift)
                 if let shortcut = type.keyboardShortcut {
                     Text(shortcut)
-                        .font(.system(size: 9, weight: .semibold, design: .monospaced))
-                        .foregroundColor(.white.opacity(0.35))
-                        .padding(.horizontal, 4)
-                        .padding(.vertical, 2)
-                        .background(RoundedRectangle(cornerRadius: 3).fill(Color.white.opacity(0.08)))
+                        .font(DS.Font.code)
+                        .foregroundColor(DS.Colors.text3)
                 }
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
-            .background(
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(isHovered ? Color.white.opacity(0.06) : Color.clear)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 6)
-                    .stroke(isHovered ? type.color.opacity(0.25) : Color.clear, lineWidth: 1)
-            )
+            .padding(.horizontal, DS.Space.md)
+            .padding(.vertical, DS.Space.sm)
+            .background(isHovered ? DS.Colors.bg2 : .clear)
         }
         .buttonStyle(.plain)
-        .onHover { hovering in
-            isHovered = hovering
-        }
+        .onHover { isHovered = $0 }
         .help(type.fullDescription)
     }
 }
@@ -272,46 +253,20 @@ struct RenderStatsView: View {
     @EnvironmentObject var graphModel: GraphModel
     
     var body: some View {
-        VStack(alignment: .trailing, spacing: 2) {
-            Text("GPU: M3 Max")
-                .font(.system(size: 10, weight: .medium, design: .monospaced))
-            Text("\(graphModel.nodes.count) nodes · \(graphModel.connections.count) connections")
-                .font(.system(size: 10, weight: .medium, design: .monospaced))
+        HStack(spacing: DS.Space.md) {
+            Text("\(graphModel.nodes.count)n")
+            Text("\(graphModel.connections.count)c")
         }
-        .foregroundColor(.white.opacity(0.4))
-        .padding(8)
-        .background(
-            RoundedRectangle(cornerRadius: 6)
-                .fill(Color.black.opacity(0.4))
-        )
+        .font(DS.Font.code)
+        .foregroundColor(DS.Colors.text3)
+        .padding(.horizontal, DS.Space.md)
+        .padding(.vertical, DS.Space.xs)
+        .background(DS.Colors.bg1.opacity(0.9))
+        .cornerRadius(DS.Radius.sm)
     }
 }
 
-extension Color {
-    init(hex: String) {
-        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        var int: UInt64 = 0
-        Scanner(string: hex).scanHexInt64(&int)
-        let a, r, g, b: UInt64
-        switch hex.count {
-        case 3: // RGB (12-bit)
-            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
-        case 6: // RGB (24-bit)
-            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
-        case 8: // ARGB (32-bit)
-            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
-        default:
-            (a, r, g, b) = (255, 0, 0, 0)
-        }
-        self.init(
-            .sRGB,
-            red: Double(r) / 255,
-            green: Double(g) / 255,
-            blue: Double(b) / 255,
-            opacity: Double(a) / 255
-        )
-    }
-}
+// Color extension moved to DesignSystem.swift
 
 #if DEBUG
 struct ContentView_Previews: PreviewProvider {

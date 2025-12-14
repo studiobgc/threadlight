@@ -29,6 +29,7 @@
 		A20 /* InteractionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22; };
 		A21 /* MicroInteractions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23; };
 		A22 /* HighPerformanceRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B24; };
+		A23 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = B25; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -57,6 +58,7 @@
 		B22 /* InteractionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractionManager.swift; sourceTree = "<group>"; };
 		B23 /* MicroInteractions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MicroInteractions.swift; sourceTree = "<group>"; };
 		B24 /* HighPerformanceRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighPerformanceRenderer.swift; sourceTree = "<group>"; };
+		B25 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -152,6 +154,7 @@
 				B22 /* InteractionManager.swift */,
 				B23 /* MicroInteractions.swift */,
 				B24 /* HighPerformanceRenderer.swift */,
+				B25 /* DesignSystem.swift */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -266,6 +269,7 @@
 				A20 /* InteractionManager.swift in Sources */,
 				A21 /* MicroInteractions.swift in Sources */,
 				A22 /* HighPerformanceRenderer.swift in Sources */,
+				A23 /* DesignSystem.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
