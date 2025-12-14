@@ -120,6 +120,18 @@ class CanvasMTKView: MTKView {
             return
         }
         
+        // ARTICY-STYLE: Ctrl+Shift+1 = Smart Create (connected dialogue from selection)
+        if modifiers.contains(.control) && modifiers.contains(.shift) && key == "1" {
+            coordinator.smartCreate()
+            return
+        }
+        
+        // ARTICY-STYLE: Alt+Arrow = Navigate between connected nodes
+        if modifiers.contains(.option) && event.keyCode >= 123 && event.keyCode <= 126 {
+            coordinator.navigateToConnectedNode(direction: event.keyCode)
+            return
+        }
+        
         // Command shortcuts
         if modifiers.contains(.command) {
             switch key.lowercased() {
@@ -304,6 +316,43 @@ extension MetalCanvas {
         func resetZoom() {
             graphModel.viewportZoom = 1.0
             graphModel.viewportOffset = .zero
+        }
+        
+        // ARTICY-STYLE: Smart Create - create connected dialogue from selected node
+        func smartCreate() {
+            guard let selectedId = graphModel.selectedNodeIds.first,
+                  let selectedNode = graphModel.getNode(selectedId) else {
+                // No selection - create at center
+                let center = CGPoint(x: 400, y: 300)
+                graphModel.addNode(type: .dialogue, at: screenToWorld(center))
+                return
+            }
+            let newPos = CGPoint(
+                x: selectedNode.position.x + selectedNode.size.width + 80,
+                y: selectedNode.position.y
+            )
+            if let newNode = graphModel.createConnectedNode(from: selectedId, type: .dialogue) {
+                graphModel.updateNodePosition(newNode.id, to: newPos)
+                graphModel.selectedNodeIds = [newNode.id]
+            }
+        }
+        
+        // ARTICY-STYLE: Navigate to connected nodes via Alt+Arrow
+        func navigateToConnectedNode(direction: UInt16) {
+            guard let selectedId = graphModel.selectedNodeIds.first else { return }
+            var targetId: UUID?
+            switch direction {
+            case 124: if let conn = graphModel.connections.first(where: { $0.fromNodeId == selectedId }) { targetId = conn.toNodeId }
+            case 123: if let conn = graphModel.connections.first(where: { $0.toNodeId == selectedId }) { targetId = conn.fromNodeId }
+            default: break
+            }
+            if let target = targetId {
+                graphModel.selectedNodeIds = [target]
+                if let node = graphModel.getNode(target) {
+                    let nodeCenter = CGPoint(x: node.position.x + node.size.width/2, y: node.position.y + node.size.height/2)
+                    graphModel.viewportOffset = CGPoint(x: -nodeCenter.x * graphModel.viewportZoom + 400, y: -nodeCenter.y * graphModel.viewportZoom + 300)
+                }
+            }
         }
         
         @objc func handleScroll(_ gesture: NSMagnificationGestureRecognizer) {

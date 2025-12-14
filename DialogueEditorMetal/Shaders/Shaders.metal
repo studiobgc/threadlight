@@ -158,95 +158,42 @@ fragment float4 nodeFragmentShader(
     float2 halfSize = in.size * 0.5;
     float2 center = pos - halfSize;
     
-    // Calculate SDF for rounded rectangle
+    // SDF for rounded rectangle
     float dist = roundedBoxSDF(center, halfSize, in.cornerRadius);
     
-    // Anti-aliased edge (crisp at all zoom levels)
-    float aa = fwidth(dist) * 1.2;
+    // Crisp anti-aliased edge
+    float aa = fwidth(dist) * 1.0;
     float shape = smoothEdge(dist, aa);
     
-    // Early discard for fully transparent pixels
     if (shape < 0.001) {
         discard_fragment();
     }
     
-    // === DROP SHADOW (rendered first, behind node) ===
-    float2 shadowOffset = float2(0, 6);
-    float shadowBlur = 12.0;
-    float shadowDist = roundedBoxSDF(center + shadowOffset, halfSize, in.cornerRadius);
-    float shadowAlpha = saturate(exp(-max(0.0, shadowDist) / shadowBlur)) * 0.4;
+    // Header region (top 30px)
+    float headerHeight = 30.0;
+    float headerMask = smoothstep(halfSize.y - headerHeight - 1, halfSize.y - headerHeight + 1, -center.y);
     
-    // Stronger shadow when selected (lifted effect)
-    if (in.isSelected > 0.5) {
-        shadowOffset = float2(0, 10);
-        shadowBlur = 18.0;
-        shadowDist = roundedBoxSDF(center + shadowOffset, halfSize, in.cornerRadius);
-        shadowAlpha = saturate(exp(-max(0.0, shadowDist) / shadowBlur)) * 0.55;
-    }
+    // Simple colors - no gradients, no fancy effects
+    float4 baseColor = mix(in.backgroundColor, in.headerColor, headerMask);
     
-    // === HEADER REGION ===
-    float headerHeight = 32.0;
-    float headerMask = smoothstep(halfSize.y - headerHeight - 1.5, halfSize.y - headerHeight + 0.5, -center.y);
-    
-    // Subtle gradient in header
-    float headerGradient = smoothstep(halfSize.y, halfSize.y - headerHeight, -center.y);
-    float4 headerColorShaded = in.headerColor * (0.9 + headerGradient * 0.1);
-    
-    // Base color with subtle body gradient
-    float bodyGradient = 1.0 - (center.y + halfSize.y) / (halfSize.y * 2) * 0.08;
-    float4 bodyColor = in.backgroundColor * bodyGradient;
-    float4 baseColor = mix(bodyColor, headerColorShaded, headerMask);
-    
-    // === SELECTION GLOW (Articy-style pulsing glow) ===
+    // Border - simple and clean
+    float borderDist = abs(dist) - in.borderWidth * 0.5;
+    float borderMask = smoothEdge(borderDist, aa);
     float4 borderColor = in.borderColor;
     
+    // Selection: just brighter border
     if (in.isSelected > 0.5) {
-        float4 selectionColor = float4(0.486, 0.227, 0.929, 1.0);
-        borderColor = selectionColor;
-        
-        // Animated pulsing glow
-        float pulse = 0.7 + 0.3 * sin(uniforms.time * 2.5);
-        float glowRadius = 20.0 * pulse;
-        float glowDist = -dist;
-        float glow = saturate(exp(-glowDist / glowRadius)) * 0.5 * pulse;
-        
-        // Apply glow to base color
-        baseColor = mix(baseColor, selectionColor, glow * in.glowIntensity);
+        borderColor = float4(0.486, 0.227, 0.929, 1.0);
     }
     
-    // === HOVER EFFECT (subtle highlight) ===
+    // Hover: subtle border change
     if (in.isHovered > 0.5 && in.isSelected < 0.5) {
-        float4 hoverColor = float4(0.7, 0.6, 1.0, 1.0);
-        borderColor = hoverColor;
-        
-        // Subtle inner glow on hover
-        float hoverGlow = saturate(exp(dist / 8.0)) * 0.15;
-        baseColor = mix(baseColor, hoverColor, hoverGlow);
+        borderColor = float4(0.5, 0.4, 0.8, 1.0);
     }
     
-    // === BORDER ===
-    float borderWidth = in.borderWidth;
-    if (in.isSelected > 0.5) borderWidth = 2.5;
-    if (in.isHovered > 0.5 && in.isSelected < 0.5) borderWidth = 2.0;
-    
-    float borderDist = abs(dist) - borderWidth * 0.5;
-    float borderMask = smoothEdge(borderDist, aa);
-    
-    // === INNER SHADOW (depth effect at header/body boundary) ===
-    float innerShadowY = halfSize.y - headerHeight;
-    float innerShadow = saturate(exp(-(center.y + innerShadowY) / 4.0)) * 0.2;
-    baseColor.rgb *= 1.0 - innerShadow * (1.0 - headerMask);
-    
-    // === SUBTLE HIGHLIGHT at top edge ===
-    float topHighlight = saturate(exp((center.y - halfSize.y + 2) / 1.5)) * 0.08;
-    baseColor.rgb += topHighlight * headerMask;
-    
-    // === COMBINE ALL LAYERS ===
+    // Combine - simple blend
     float4 color = mix(baseColor, borderColor, (1.0 - borderMask) * shape);
     color.a *= shape;
-    
-    // Mix shadow underneath (pre-multiplied alpha blend simulation)
-    float4 shadowColor = float4(0, 0, 0, shadowAlpha * (1.0 - shape));
     
     return color;
 }
