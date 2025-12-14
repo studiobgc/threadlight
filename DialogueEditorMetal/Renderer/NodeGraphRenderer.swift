@@ -235,7 +235,7 @@ class NodeGraphRenderer {
     
     private func updateUniforms(viewportOffset: CGPoint, viewportZoom: CGFloat) {
         var uniforms = Uniforms(
-            viewProjectionMatrix: matrix_identity_float4x4,
+            viewProjectionMatrix: createViewProjectionMatrix(width: Float(viewportSize.width), height: Float(viewportSize.height), zoom: Float(viewportZoom), panX: Float(viewportOffset.x), panY: Float(viewportOffset.y)),
             viewportSize: SIMD2<Float>(Float(viewportSize.width), Float(viewportSize.height)),
             time: time,
             zoom: Float(viewportZoom),
@@ -512,6 +512,14 @@ class NodeGraphRenderer {
         )
     }
     
+    private func createViewProjectionMatrix(width: Float, height: Float, zoom: Float, panX: Float, panY: Float) -> matrix_float4x4 {
+        var matrix = matrix_identity_float4x4
+        matrix.columns.0.x = zoom * 2.0 / width
+        matrix.columns.1.y = -zoom * 2.0 / height
+        matrix.columns.3.x = (panX * 2.0 / width) - 1.0
+        matrix.columns.3.y = -(panY * 2.0 / height) + 1.0
+        return matrix
+    }
     private func matrix4x4_translation(_ x: Float, _ y: Float, _ z: Float) -> matrix_float4x4 {
         var matrix = matrix_identity_float4x4
         matrix.columns.3 = SIMD4<Float>(x, y, z, 1)
