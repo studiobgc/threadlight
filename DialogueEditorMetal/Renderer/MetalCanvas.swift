@@ -33,10 +33,19 @@ struct MetalCanvas: NSViewRepresentable {
         // Performance: Presentsusing CAMetalLayer for better performance
         mtkView.framebufferOnly = true
         
-        // Setup gesture recognizers with improved responsiveness
-        let panGesture = NSPanGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handlePan(_:)))
-        panGesture.delaysPrimaryMouseButtonEvents = false // Immediate response
+        // GESTURE RECOGNIZERS - FIGMA STYLE
+        // Two-finger pan on trackpad = pan canvas
+        let twoFingerPan = NSPanGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTwoFingerPan(_:)))
+        twoFingerPan.numberOfTouchesRequired = 2
+        twoFingerPan.delaysPrimaryMouseButtonEvents = false
         
+        // Single finger drag = select/move nodes  
+        let oneFingerPan = NSPanGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handlePan(_:)))
+        oneFingerPan.numberOfTouchesRequired = 1
+        oneFingerPan.buttonMask = 0x1  // Left mouse button
+        oneFingerPan.delaysPrimaryMouseButtonEvents = false
+        
+        // Pinch = zoom
         let magnifyGesture = NSMagnificationGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleMagnify(_:)))
         
         let clickGesture = NSClickGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleClick(_:)))
@@ -49,15 +58,12 @@ struct MetalCanvas: NSViewRepresentable {
         let rightClickGesture = NSClickGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleRightClick(_:)))
         rightClickGesture.buttonMask = 0x2
         
-        // Add scroll gesture for zooming
-        let scrollGesture = NSMagnificationGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleScroll(_:)))
-        
-        mtkView.addGestureRecognizer(panGesture)
+        mtkView.addGestureRecognizer(twoFingerPan)
+        mtkView.addGestureRecognizer(oneFingerPan)
         mtkView.addGestureRecognizer(magnifyGesture)
         mtkView.addGestureRecognizer(clickGesture)
         mtkView.addGestureRecognizer(doubleClickGesture)
         mtkView.addGestureRecognizer(rightClickGesture)
-        mtkView.addGestureRecognizer(scrollGesture)
         
         // Track mouse for hover effects - use inVisibleRect for auto-updates
         let trackingArea = NSTrackingArea(
@@ -102,60 +108,32 @@ class CanvasMTKView: MTKView {
         return true
     }
     
-    // Allow scroll events to pass through
+    // FIGMA: Cmd + scroll = ZOOM (scroll events still come through for this)
     override func scrollWheel(with event: NSEvent) {
-        // Forward to our custom handler
-        handleScrollWheel(event)
-    }
-    
-    private func handleScrollWheel(_ event: NSEvent) {
         guard let coordinator = coordinator else { return }
         
-        let mouseInWindow = event.locationInWindow
-        let mouseInView = self.convert(mouseInWindow, from: nil)
-        
-        // FIGMA CONTROLS:
-        // - Two-finger scroll = PAN
-        // - Cmd + scroll = ZOOM
-        // - Pinch = ZOOM
-        
-        let isPinchZoom = abs(event.magnification) > 0.001
-        let isCmdZoom = event.modifierFlags.contains(.command)
-        
-        if isPinchZoom {
-            // PINCH ZOOM
+        // Only handle Cmd+scroll for zoom - two-finger pan is handled by gesture recognizer
+        if event.modifierFlags.contains(.command) {
+            let mouseInView = self.convert(event.locationInWindow, from: nil)
             let oldZoom = coordinator.graphModel.viewportZoom
             let oldOffset = coordinator.graphModel.viewportOffset
-            let zoomDelta = 1.0 + event.magnification
-            let newZoom = max(0.1, min(5.0, oldZoom * zoomDelta))
-            let zoomRatio = newZoom / oldZoom
-            let newOffset = CGPoint(
-                x: mouseInView.x - (mouseInView.x - oldOffset.x) * zoomRatio,
-                y: mouseInView.y - (mouseInView.y - oldOffset.y) * zoomRatio
-            )
-            coordinator.graphModel.viewportZoom = newZoom
-            coordinator.graphModel.viewportOffset = newOffset
             
-        } else if isCmdZoom {
-            // CMD + SCROLL = ZOOM
-            let oldZoom = coordinator.graphModel.viewportZoom
-            let oldOffset = coordinator.graphModel.viewportOffset
-            let zoomSpeed: CGFloat = 0.01
+            // Zoom speed
+            let zoomSpeed: CGFloat = 0.008
             let zoomDelta = 1.0 - (event.scrollingDeltaY * zoomSpeed)
             let newZoom = max(0.1, min(5.0, oldZoom * zoomDelta))
+            
+            // Keep cursor position fixed
             let zoomRatio = newZoom / oldZoom
             let newOffset = CGPoint(
                 x: mouseInView.x - (mouseInView.x - oldOffset.x) * zoomRatio,
                 y: mouseInView.y - (mouseInView.y - oldOffset.y) * zoomRatio
             )
+            
             coordinator.graphModel.viewportZoom = newZoom
             coordinator.graphModel.viewportOffset = newOffset
-            
-        } else {
-            // TWO-FINGER SCROLL = PAN
-            coordinator.graphModel.viewportOffset.x += event.scrollingDeltaX
-            coordinator.graphModel.viewportOffset.y += event.scrollingDeltaY
         }
+        // Note: Two-finger pan without Cmd is handled by handleTwoFingerPan gesture
     }
     
     override func keyDown(with event: NSEvent) {
@@ -529,19 +507,29 @@ extension MetalCanvas {
             nodeStartPositions.removeAll()
         }
         
+        // FIGMA: Two-finger scroll on trackpad = PAN
+        @objc func handleTwoFingerPan(_ gesture: NSPanGestureRecognizer) {
+            let translation = gesture.translation(in: gesture.view)
+            
+            // Apply pan directly to viewport offset
+            graphModel.viewportOffset.x += translation.x
+            graphModel.viewportOffset.y += translation.y
+            
+            // Reset translation for incremental updates
+            gesture.setTranslation(.zero, in: gesture.view)
+        }
+        
+        // FIGMA: Pinch = ZOOM centered on cursor
         @objc func handleMagnify(_ gesture: NSMagnificationGestureRecognizer) {
             guard let view = gesture.view else { return }
             
-            // Get pinch center position
             let mouseInView = gesture.location(in: view)
-            
             let oldZoom = graphModel.viewportZoom
             let oldOffset = graphModel.viewportOffset
             
-            // Calculate new zoom
-            let newZoom = max(0.05, min(10.0, oldZoom * (1 + gesture.magnification)))
+            let newZoom = max(0.1, min(5.0, oldZoom * (1 + gesture.magnification)))
             
-            // Figma-style cursor-centered zoom
+            // Keep cursor position fixed in world space
             let zoomRatio = newZoom / oldZoom
             let newOffset = CGPoint(
                 x: mouseInView.x - (mouseInView.x - oldOffset.x) * zoomRatio,

@@ -54,14 +54,20 @@ struct ContentView: View {
     }
     
     var mainEditorView: some View {
-        HSplitView {
-            // Left: Node Palette
+        HStack(spacing: 0) {
+            // Left: Node Palette (fixed width, custom styling)
             if showingPalette {
                 NodePalette()
-                    .frame(minWidth: 200, maxWidth: 250)
+                    .frame(width: 220)
+                    .background(DS.Colors.bg1)
+                
+                // Custom divider (1px)
+                Rectangle()
+                    .fill(DS.Colors.border0)
+                    .frame(width: 1)
             }
             
-            // Center: Metal Canvas
+            // Center: Canvas + Toolbar
             VStack(spacing: 0) {
                 EditorToolbar(
                     showingPalette: $showingPalette,
@@ -69,26 +75,24 @@ struct ContentView: View {
                     isWritingMode: $isWritingMode
                 )
                 
-                ZStack {
-                    NodeEditorView()
-                    
-                    // Floating stats overlay
-                    VStack {
-                        HStack {
-                            Spacer()
-                            RenderStatsView()
-                                .padding(8)
-                        }
-                        Spacer()
-                    }
-                }
+                // 1px divider under toolbar
+                Rectangle()
+                    .fill(DS.Colors.border0)
+                    .frame(height: 1)
+                
+                NodeEditorView()
             }
-            .frame(minWidth: 600)
             
-            // Right: Properties Panel
+            // Right: Properties Panel (fixed width)
             if showingProperties {
+                // Custom divider (1px)
+                Rectangle()
+                    .fill(DS.Colors.border0)
+                    .frame(width: 1)
+                
                 PropertiesPanel()
-                    .frame(minWidth: 280, maxWidth: 350)
+                    .frame(width: 260)
+                    .background(DS.Colors.bg1)
             }
         }
         .background(DS.Colors.bg0)
