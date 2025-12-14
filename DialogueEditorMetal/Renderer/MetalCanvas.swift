@@ -251,6 +251,10 @@ extension MetalCanvas {
         private var hoveredNodeId: UUID?
         private var hoveredPortInfo: (nodeId: UUID, portType: Port.PortType, portIndex: Int)?
         
+        // Momentum scrolling state
+        private var velocity: CGPoint = .zero
+        private var momentumTimer: Timer?
+        
         init(graphModel: GraphModel) {
             self.graphModel = graphModel
             super.init()
